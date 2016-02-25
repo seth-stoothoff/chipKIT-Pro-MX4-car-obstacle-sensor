@@ -43,6 +43,8 @@
 /************************************************************************/
 uint16_t  data;
 uint16_t  data_div;
+uint16_t  data_feet;
+uint16_t  data_inches;
 MAXSonar  sensor;
 LCDS      MyLCDS;
 char      szInfo1[0x27];
@@ -106,7 +108,17 @@ void loop()
   sensor.end(Serial1, RXpin);
   
   if(units == INCH){
-    sprintf(szInfo1, "%3u inches", data);
+    if (data < 12) {
+      data_feet = 0;
+      data_inches = 0;
+      sprintf(szInfo1, "%2u ft %2u in", data_feet, data);
+    } else {
+      // converts to feet and truncates the remainder.
+      data_feet = data / 12;
+      // calculates remainder of feet conversion to display inches
+      data_inches = data % 12;
+      sprintf(szInfo1, "%2u ft %2u in", data_feet, data_inches);
+    }
   }
   else if(units == CM){
     sprintf(szInfo1, "%3u centimeters", data);
@@ -118,10 +130,12 @@ void loop()
   MyLCDS.DisplayClear();
   MyLCDS.WriteStringAtPos(0, 0, szInfo1);
   
-  data_div = data / 16;
-  for (int i = 0; i < data_div; i++) {
-    MyLCDS.DispUserChar(charsToDisp, 1, 1, i);
-    delay(5);
+  if (units == INCH) {
+    data_div = data / 16;
+    for (int i = 0; i < data_div; i++) {
+      MyLCDS.DispUserChar(charsToDisp, 1, 1, i);
+      delay(5);
+    }
   }
   
   delay(500);
